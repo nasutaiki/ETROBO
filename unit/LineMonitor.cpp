@@ -93,6 +93,7 @@ int LineMonitor::isOnLine3() const {
     // 白
     else if ( cr >= 40 ) {
         count = 0;
+
         if(cr>=60)return 1;
         else if(cr < 60)return 8;
     }

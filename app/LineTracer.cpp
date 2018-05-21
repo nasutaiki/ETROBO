@@ -1,6 +1,3 @@
-
-
-
 /******************************************************************************
  *  LineTracer.cpp (for LEGO Mindstorms EV3)
  *  Created on: 2015/01/26
@@ -46,10 +43,10 @@ void LineTracer::run() {
     }
 
     // 走行体の向きを計算する
-    mPidController->setPidFactor(1.1, 0.8, 0.1);//1.0, 0.2, 0.02
+    mPidController->setPidFactor(1.10, 0.8, 0.1);//1.0, 0.2, 0.02
     int direction = calcDirection();
 
-    mBalancingWalker->setCommand(50, direction);//速度
+    mBalancingWalker->setCommand(60, direction);//速度
 
     // 倒立走行を行う
     mBalancingWalker->run();
@@ -93,10 +90,10 @@ void LineTracer::run90(){
     }
 
     // 走行体の向きを計算する
-    mPidController->setPidFactor(0.5, 0.01, 0.05);
+    mPidController->setPidFactor(0.8, 0.01, 0.05);
     int direction = calcDirection();
 
-    mBalancingWalker->setCommand(95, direction);
+    mBalancingWalker->setCommand(100, direction);
 
     // 倒立走行を行う
     mBalancingWalker->run();
@@ -109,7 +106,7 @@ void LineTracer::runLOW(){
     }
 
     // 走行体の向きを計算する
-    mPidController->setPidFactor(1.0, 0.01, 0.1);
+    mPidController->setPidFactor(1.2, 0.01, 0.1);
     int direction = calcDirection();
 
     mBalancingWalker->setCommand(BalancingWalker::LOW, direction);
@@ -125,10 +122,10 @@ void LineTracer::run80(){
     }
 
 	// 走行体の向きを計算する
-    mPidController->setPidFactor(1.40, 0.8, 0.1);//2.80, 0.10, 0.5);
+    mPidController->setPidFactor(2.00, 0.8, 0.1);//2.80, 0.10, 0.5);
     int direction = calcDirection();
 
-    mBalancingWalker->setCommand(80, direction);
+    mBalancingWalker->setCommand(30, direction);
 
     // 倒立走行を行う
     mBalancingWalker->run();
@@ -178,22 +175,6 @@ int LineTracer::runOnOff2(){
 
 	return 0;
 }
-void LineTracer::runOnOff99(){
-    /*if (mIsInitialized == false) {
-        mBalancingWalker->init();
-        mIsInitialized = true;
-    }*/
-    bool isOnLine = mLineMonitor->isOnLine();
-
-    if(isOnLine == true){
-        mLeftWheel.setPWM(13);
-        mRightWheel.setPWM(-6);
-    }
-    else{
-        mLeftWheel.setPWM(-6);
-        mRightWheel.setPWM(13);
-    }
-}
 /* バランス崩す状態の走行 */
 int LineTracer::runOnOff3(){
     if (mIsInitialized == false) {
@@ -220,52 +201,6 @@ int LineTracer::runOnOff3(){
 
 
 	return 0;
-}
-void LineTracer::runOnOff4(){
-    /*if (mIsInitialized == false) {
-        mBalancingWalker->init();
-        mIsInitialized = true;
-    }*/
-    bool isOnLine = mLineMonitor->isOnLine();
-
-    if(isOnLine == true){
-        mLeftWheel.setPWM(15);
-        mRightWheel.setPWM(-5);
-    }
-    else{
-        mLeftWheel.setPWM(-5);
-        mRightWheel.setPWM(15);
-    }
-}
-/* バランス崩す状態ライン探す */
-void LineTracer::runFind(){
-    static int find = 0;
-    static int time1 = 0;
-    if (mIsInitialized == false) {
-        mBalancingWalker->init();
-        mIsInitialized = true;
-    }
-    bool isOnLine = mLineMonitor ->isOnLine();//ライン上判定（ジャイロセンサ）
-	//回転を行う
-    time1++;
-    if(isOnLine == false){
-            mLeftWheel.setPWM(0);
-		    mRightWheel.setPWM(0);
-    }
-    if(find == 0 && isOnLine == true){
-        mLeftWheel.setPWM(25);
-	    mRightWheel.setPWM(-25);
-    }
-    if(find == 1 && isOnLine == true){
-        mLeftWheel.setPWM(-25);
-	    mRightWheel.setPWM(25);
-    }
-    if(time1 > 100 && isOnLine == true)find = 1;
-    if(time1 > 300 && isOnLine == true){
-        find = 0;
-        time1 = 0;
-    }
-	
 }
 /* バランス崩す状態の回転 */
 void LineTracer::runBack1(){
@@ -301,6 +236,7 @@ void LineTracer::runBack2(){
     }
 	
 }
+
 // バランス崩し
 void LineTracer::runAnBalance(){
 	if (mIsInitialized == false) {
@@ -369,8 +305,5 @@ void LineTracer::edgeChage(int edge) {
 }
 
 int LineTracer::getAngle(){
-	return mBalancingWalker->jyro();
-}
-void LineTracer::Init(){
-    mIsInitialized = false;
+	return mBalancingWalker->getAngle();
 }

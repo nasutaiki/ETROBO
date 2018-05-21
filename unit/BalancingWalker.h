@@ -31,7 +31,6 @@ public:
     void setCommand(int forward, float turn);
     int getAngle();
     bool detectFall();
-	int jyro();
 
 private:
     const ev3api::GyroSensor& mGyroSensor;

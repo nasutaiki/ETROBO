@@ -151,38 +151,38 @@ void LineTracerWithStarter::execWalking() {
 		case 0:									// テイル回収
 			mLineTracer->runLOW();
 			if(mLeftWheel.getCount() > 3){
-				mTailWheel.setPWM(-50);
+				mTailWheel.setPWM(-48);
 				count++;
 			}
 			break;
 		case 1:									// テイル回収したあと走行する
 			mLineTracer->runLOW();
 			if(mTailWheel.getCount() == 0) mTailWheel.setPWM(0);
-			if(mLeftWheel.getCount() > 50){
+			if(mLeftWheel.getCount() > 100){
 				count=2;
 				//mState = FIGURE;
 			}
 			break;
 		case 2:									// 第一直線
-			mLineTracer->run();
-			//if(mLeftWheel.getCount() > 2800){
-				//count=3;
-			//}
+			mLineTracer->run90();
+			if(mLeftWheel.getCount() > 2000){
+				count=3;
+			}
 			break;
 		case 3:									// 第1カーブ
-			mLineTracer->run();
-			if(mLeftWheel.getCount() > 7000){
+			mLineTracer->run80();
+			if(mLeftWheel.getCount() > 4800){
 				count++;
 			}
 			break;
 		case 4:									// 第2カーブ
-			mLineTracer->run();
-			if(mLeftWheel.getCount() > 12200){
+			mLineTracer->runLOW();
+			if(mLeftWheel.getCount() > 6500){
 				count++;
 			}
 			break;
 		case 5:									// 第3カーブ
-			mLineTracer->run();
+			mLineTracer->runLOW();
 			if(mLeftWheel.getCount() > 12200){
 				count++;
 			}
@@ -195,7 +195,7 @@ void LineTracerWithStarter::execWalking() {
 			break;
 		case 7:									// フィギュア前まで
 			mLineTracer->run3();
-			if(mLeftWheel.getCount() > 16000){  //10000
+			if(mLeftWheel.getCount() > 15850){  //10000
 				mState = FIGURE;
 				//mLeftWheel.setCount(0);
 			}
@@ -206,526 +206,106 @@ void LineTracerWithStarter::execWalking() {
 /**
  * 難所１の処理
  */
-
 void LineTracerWithStarter::execFigure() {
-	static int32_t countF = 0;
+	static int8_t countF = 0;
 	static int32_t time = 0;
-	static int32_t x=73;
+	int sonarInt = 0;
 	switch(countF){
 		case 0:
-			time++;
-			if( time > 225 ) {
-				countF++;							//初期化
-				time = 0;
-				mLeftWheel.setCount(0);
-				mRightWheel.setCount(0);
+			mLineTracer->run3();
+			sonarInt = mSonarSensor.getDistance();		//超音波センサから値を取る
+			if(sonarInt <= 20){
+				countF = 1;
+				mTailWheel.setPWM(10);
 			}
-			mLineTracer->runStop();					// その場で止まる
 			break;
 		case 1:
-		if( mTailWheel.getCount() >= 80 ) {			//尻尾角度確認
-			mTailWheel.setPWM(0);
-			if(mLineTracer->getAngle() <= -30){
-				mLeftWheel.setCount(0);
-				while(time<1000)time++;
-				time=0;
-				countF++;
+			mLineTracer->runStop();						// その場で止まる
+			if(mTailWheel.getCount() >= 75){			// テイル降ろす
+				mTailWheel.setPWM(0);
+				mTailWheel.setCount(75);
+				if(mLineTracer->getAngle() == false) {
+					countF = 2;
+				}
 			}
-		}
-			mLineTracer->runStop();
-			mTailWheel.setPWM(10);
 			break;
 		case 2:
-			mLeftWheel.setPWM(10);					//前進、尻尾再確認
+			mLeftWheel.setPWM(10);
 			mRightWheel.setPWM(10);
 			time++;
-			if(time > 50) {
+			if(time > 120) {
 				time = 0;
-				while(mTailWheel.getCount() >= 80)mTailWheel.setPWM(-2);
-				mTailWheel.setPWM(0);
-				mLeftWheel.setCount(0);
-				countF++;    
+				mTailWheel.setPWM(-1);
+				countF = 3;
 			}
 			break;
-        case 3:
-          	mLineTracer->runOnOff4();					//道（黒い線）を探す
-			time++;
-            if(time > 5000){
-                countF=150;
-            	time=0;
-            }
-            break;
-		 case 150:
-			time++;
-			mLeftWheel.setPWM(35);						//左タイヤ登る
-            mRightWheel.setPWM(0);
-			 if(time > 150){
-                countF++;
-            	time=0;
-            }
-			break;
-		 case 151:
-			time++;
-			mLeftWheel.setPWM(0);						//右タイヤ登る
-            mRightWheel.setPWM(35);
-			 if(time > 280){
-                countF=4;
-            	time=0;
-            }
-			break;
-		 case 4:
-          	mLeftWheel.setPWM(10);						//登る速度（調整速度）
-			mRightWheel.setPWM(10);
-			time++;
-            if(time > 1500){
-                countF++;
-            	time=0;
-            }
-            break;
-		  case 5:										//尻尾登る、case ５から８
-            time++;
-            mLeftWheel.setPWM(-5);
-            mRightWheel.setPWM(-5);
-            mTailWheel.setPWM(10);
-            if(time >= 250 || mTailWheel.getCount() > 97){
-                countF ++;
-            }
-            break;
-        case 6:
-            if(mTailWheel.getCount() > 97){
-                mLeftWheel.setPWM(10);
-                mRightWheel.setPWM(10);
-                countF ++;
-            }
-            break;
-        case 7:
-            time++;
-            mRightWheel.setPWM(15);
-            mLeftWheel.setPWM(15);
-            mTailWheel.setPWM(-4);
-            if(time > 125 || mTailWheel.getCount() < 85){
-                countF ++;
-                time = 0;
-            }
-            break;
-        case 8:
-            mTailWheel.setPWM(-4);
-            if(mTailWheel.getCount() < 85){
-                //mLineTracer->runOnOffStop();
-                mTailWheel.setPWM(0);
-                countF ++;
-                mLeftWheel.setCount(0);
-            }
-            break;
-        case 9:									//真ん中にする
-            mLeftWheel.setPWM(10);
-            mRightWheel.setPWM(10);
-            if(mLeftWheel.getCount() > 125){
-                countF ++;
-            }
-            break;
-		case 10:								//止まるand尻尾調整
-            mLeftWheel.setPWM(0);
-            mRightWheel.setPWM(0);
-            mTailWheel.setPWM(1);
-            if(mTailWheel.getCount() >= 85){
-                countF ++;
-            	mTailWheel.setPWM(0);
-            	time=0;
-            }
-            break;
-        case 11:								//回転の準備
-            time++;
-            mLeftWheel.setPWM(0);
-            mRightWheel.setPWM(0);
-            if(time > 250){
-                countF ++;
-                time = 0;
-                mLeftWheel.setCount(0);
-            }
-            break;
-		case 12:								//1回転目、case 12,case 122
-            mLeftWheel.setPWM(10);
-            mRightWheel.setPWM(-10);
-            if(mLeftWheel.getCount() > 900){
-                countF =122;
-                mLeftWheel.setCount(0);
-            	mRightWheel.setCount(0);
-            }
-            break;
-		case 122:
-            mLeftWheel.setPWM(-10);
-            mRightWheel.setPWM(10);
-            if(mRightWheel.getCount() > 220){
-                countF =13;
-                mLeftWheel.setCount(0);
-            }
-            break;
-        //sen sagasu
-        case 13:							//case13から16、回転後の調整
-            time++;
-            //mLineTracer->runFind();
-            mLeftWheel.setPWM(5);
-            mRightWheel.setPWM(5);
-            if(time > 255){
-                countF ++;
-                time = 0;
-                mLeftWheel.setPWM(0);
-                mRightWheel.setPWM(0);
-            }
-            break;
-        case 14:
-            time++;
-            mLeftWheel.setPWM(0);
-            mRightWheel.setPWM(0);
-            if(time > 250){
-                countF ++;
-                time = 0;
-                mLineTracer->Init();
-            }
-            break;
-        case 15:
-            //mLineTracer->Init();
-            time++;
-            mLineTracer->runStop();
-            if(time > 250){
-                countF ++;
-                time = 0;
-            }
-            break;
-        case 16:
-            //mLineTracer->Init();
-            time++;
-            mLeftWheel.setPWM(-5);
-            mRightWheel.setPWM(-5);
-            if(time > 0){
-                countF ++;
-                time = 0;
-            }
-            break;
-		case 17:							//道（黒い線）を探す
-          	mLineTracer->runOnOff4();
-			time++;
-            if(time > 2500){
-                countF=152;
-            	time=0;
-            }
-            break;
-		 case 152:							//左タイヤ登る
-			time++;
-			mLeftWheel.setPWM(35);
-            mRightWheel.setPWM(0);
-			 if(time > 150){
-                countF++;
-            	time=0;
-            }
-			break;
-		 case 153:							//右タイヤ登る
-			time++;
+		case 3:
 			mLeftWheel.setPWM(0);
-            mRightWheel.setPWM(35);
-			 if(time > 280){
-                countF=18;
-            	time=0;
-            }
-			break;
-		 case 18:
-          	mLeftWheel.setPWM(15);					//登る速度（調整速度）
-			mRightWheel.setPWM(15);
-			time++;
-            if(time > 1500){
-                countF++;
-            	time=0;
-            }
-            break;
-		  case 19:									//尻尾登る、case １９から２２
-            time++;
-            mLeftWheel.setPWM(-5);
-            mRightWheel.setPWM(-5);
-            mTailWheel.setPWM(8);
-            if(time >= 250 || mTailWheel.getCount() > 97){
-                countF ++;
-            }
-            break;
-        case 20:
-            if(mTailWheel.getCount() > 97){
-                mLeftWheel.setPWM(10);
-                mRightWheel.setPWM(10);
-                countF ++;
-            }
-            break;
-        case 21:
-            time++;
-            mRightWheel.setPWM(10);
-            mLeftWheel.setPWM(10);
-            mTailWheel.setPWM(-4);
-            if(time > 125 || mTailWheel.getCount() < 85){
-                countF ++;
-                time = 0;
-            }
-            break;
-        case 22:
-            mTailWheel.setPWM(-4);
-            if(mTailWheel.getCount() < 85){
-                //mLineTracer->runOnOffStop();
-                mTailWheel.setPWM(0);
-                countF ++;
-                mLeftWheel.setCount(0);
-            }
-            break;
-        case 23:								//真ん中にする
-            mLeftWheel.setPWM(10);
-            mRightWheel.setPWM(10);
-            if(mLeftWheel.getCount() > 125){
-                countF ++;
-            }
-            break;
-		case 24:								//止まるand尻尾調整
-            mLeftWheel.setPWM(0);
-            mRightWheel.setPWM(0);
-            mTailWheel.setPWM(1);
-            if(mTailWheel.getCount() >= 87){
-                countF =244;
-            	mTailWheel.setPWM(0);
-            	time=0;
-            }
-            break;
-		case 244:								//回転の準備
-            time++;
-            mLeftWheel.setPWM(0);
-            mRightWheel.setPWM(0);
-            if(time > 250){
-                countF =25;
-                time = 0;
-                mLeftWheel.setCount(0);
-            }
-            break;
-		case 25:								//1and3/4回転
-            mLeftWheel.setPWM(10);
-            mRightWheel.setPWM(-10);
-            if(mLeftWheel.getCount() > 1268){
-                countF ++;
-                mLeftWheel.setCount(0);
-            }
-            break;
-        //sen sagasu
-        case 26:								//階段を降りる準備、26から299
-            time++;
-            //mLineTracer->runFind();
-            mLeftWheel.setPWM(5);
-            mRightWheel.setPWM(5);
-			//if(time > 870){
-            if(mLeftWheel.getCount() > 226){
-                countF ++;
-                time = 0;
-            	mLeftWheel.setCount(0);
-                mLeftWheel.setPWM(0);
-                mRightWheel.setPWM(0);
-            }
-            break;
-        case 27:
-            time++;
-            mLeftWheel.setPWM(0);
-            mRightWheel.setPWM(0);
-            if(time > 250){
-                countF ++;
-                time = 0;
-                mLineTracer->Init();
-            }
-            break;
-        case 28:
-            //mLineTracer->Init();
-            time++;
-            mLineTracer->runStop();
-            if(time > 250){
-            	tailControll(85);
-                countF =291;
-                time = 0;
-            }
-            break;
-		case 291:
-			if(mTailWheel.getCount() > 80)tailControll2(80);
-			mTailWheel.setPWM(0);
-	        countF =2911;
-	        time = 0;
-	        mLeftWheel.setCount(0);
-            break;
-		case 2911:
-			time++;
-			if(time > 250){
-          
-	            countF =292;
-	            time = 0;
-	           	mLeftWheel.setCount(0);
-            }
-            break;
-		case 292:
-			if(mTailWheel.getCount() > 75)tailControll2(75);
-			mTailWheel.setPWM(0);
-         	countF =2921;
-	        time = 0;
-	        mLeftWheel.setCount(0);
-            break;
-		case 2921:
-			time++;
-			if(time > 250){
-          
-	            countF =293;
-	            time = 0;
-	           	mLeftWheel.setCount(0);
-            }
-            break;
-		case 293:
-			if(mTailWheel.getCount() > 75)tailControll2(75);
-			mTailWheel.setPWM(0);
-			countF =2931;
-	        time = 0;
-	        mLeftWheel.setCount(0);
-            break;
-		case 2931:
-			time++;
-			if(time > 250){
-          
-	            countF =29;
-	            time = 0;
-	           	mLeftWheel.setCount(0);
-            }
-            break;
-		 case 29:                            //階段を降りる
-			time++;
-          	mLeftWheel.setPWM(28);
-            mRightWheel.setPWM(28);
-			tailControll2(x);
-            if(time > 2){
-                x=x-1;
-            	if(x<60){
-            		countF =289;
-            		mTailWheel.setPWM(0);
-            	}
-                time = 0;
-            }
-			//mTailWheel.setPWM(1);	
-			break;
-		 case 289:                           
-			time++;
-          	mLeftWheel.setPWM(28);
-            mRightWheel.setPWM(28);
-			tailControll2(x);
-            if(	mLeftWheel.getCount()>100){
-            	countF =30;
-            	mTailWheel.setPWM(0);
-            	mLeftWheel.setPWM(0);
-            	mRightWheel.setPWM(0);
-                time = 0;
-            }
-			//mTailWheel.setPWM(1);	
-			break;
-				case 30:
-			time++;
-			//while( mTailWheel.getCount() < 45)mTailWheel.setPWM(10);
-			if(time<30 ){
-				mRightWheel.setPWM(-5);
-            	mLeftWheel.setPWM(-5);
-			}
-			/*if(time > 2 && time<10 ){
-				mRightWheel.setPWM(30);
-            	mLeftWheel.setPWM(30);
-			}*/
-			if(time>30){
-				countF++;
-                time = 0;
-			}
-			break;
-		case 31:
-			time++;
-			//while( mTailWheel.getCount() < 45)mTailWheel.setPWM(10);	
-			//mTailWheel.setPWM(0);
 			mRightWheel.setPWM(0);
-            mLeftWheel.setPWM(0);
-			/*if(time > 2 && time<10 ){
-				mRightWheel.setPWM(30);
-            	mLeftWheel.setPWM(30);
-			}*/
-			if(time>500){
-				countF ++;
-                time = 0;
+			if(mTailWheel.getCount() == 65){			// テイルおろし終わったら
+				mTailWheel.setPWM(0);
 			}
-			break;
-		case 32:
 			time++;
-			//while( mTailWheel.getCount() < 45)mTailWheel.setPWM(10);	
-			//mTailWheel.setPWM(0);
-			mRightWheel.setPWM(-1);
-            mLeftWheel.setPWM(-1);
-			/*if(time > 2 && time<10 ){
-				mRightWheel.setPWM(30);
-            	mLeftWheel.setPWM(30);
-			}*/
-			if(time>550){
-				countF ++;
-                time = 0;
+			if(time > 500){
+				time = 0;
+				countF = 4;
+				mLeftWheel.setCount(0);
 			}
 			break;
-		case 33:
-            time++;
-            mRightWheel.setPWM(10);
-            mLeftWheel.setPWM(10);
-            if(time > 140 ){
-                countF ++;
-                time = 0;
-            }
-            break;
-		 case 34:
-            time++;
-            mRightWheel.setPWM(0);
-            mLeftWheel.setPWM(0);
-            if(time > 555 ){
-               	countF ++;
-                time = 0;
-            }
-            break;
-        case 35:
-            time++;
-            static int hoge=0;
-            mRightWheel.setPWM(15);
-            mLeftWheel.setPWM(15);
-           	tailControll(x);
-            if(time > 5 ){
-                x=x+1;
-                hoge++;
-            	if(hoge>20)countF ++;
-                time = 0;
-            }
-            break;
-		case 36:
-            time++;
-            mRightWheel.setPWM(0);
-            mLeftWheel.setPWM(0);
-            if(time > 10 ){
-               	countF ++;
-                time = 0;
-            }
-            break;
-		case 37:
-			mLineTracer->runFind();
+		case 4:
+			mLineTracer->runOnOff();			
+			if(mLeftWheel.getCount() >500){
+				countF = 5;
+			}
+			break;
+		case 5:
+			mLineTracer->runBack2();
 			time++;
 			if(time > 2000){
 				time = 0;
-				countF ++;
-				//mState = LAST;
-            }
-            break;
-        case 38:
-			mLineTracer->runOnOff2();
+				countF = 6;
+			}
+			break;
+		case 6:
+			mLineTracer->runBack1();
 			time++;
-			if(time > 1000){
+			if(time > 2000){
 				time = 0;
-				countF ++;
-				//mState = LAST;
-            }
-            break;
-            
-		case 39:
+				countF = 7;
+				mLeftWheel.setCount(0);
+			}
+			break;
+		case 7:
+			mLineTracer->runOnOff();
+			if(mLeftWheel.getCount() > 700){
+				countF = 8;
+			}
+			break;
+		case 8:
+			mLineTracer->runBack2();
+			time++;
+			if(time >2000){
+				time = 0;
+				countF = 9;
+			}
+			break;
+		case 9:
+			mLineTracer->runBack1();
+			time++;
+
+			if(time >2000){
+				time = 0;
+				countF = 10;
+				mLeftWheel.setCount(0);
+			}
+		break;
+		case 10:
+			mLineTracer->runOnOff();
+			if(mLeftWheel.getCount() > 800){
+				countF = 11;
+			}
+		break;
+		case 11:
 			mLeftWheel.setPWM(-10);
 			mRightWheel.setPWM(-10);
 			mTailWheel.setPWM(3);
@@ -740,13 +320,13 @@ void LineTracerWithStarter::execFigure() {
 			if(time > 450){
 				mTailWheel.setPWM(0);
 				time = 0;
-				countF = 100;
-				//sonarInt = 0;
+				countF = 12;
+				mState = LAST;
+				sonarInt = 0;
 			}
 		break;
 	}
 }
-
 /**
  * 難所２の処理
  */
@@ -808,19 +388,18 @@ void LineTracerWithStarter::execLast(){
 
 }
 void LineTracerWithStarter::tailControll(int deg) {
-	if(deg >= 10)mTailWheel.setPWM(45);
-	else if(deg == 0)mTailWheel.setPWM(-45);
+	if(deg>10)mTailWheel.setPWM(48);
+	else if(deg == 0)mTailWheel.setPWM(-48);
 	while(1){
 		if(mTailWheel.getCount() > deg)break;
 	}
 	mTailWheel.setPWM(0);
 }
-//尻尾戻る
 void LineTracerWithStarter::tailControll2(int deg) {
-	if(deg >= 10)mTailWheel.setPWM(-1);
-	else if(deg == 0)mTailWheel.setPWM(50);
+	if(deg == 80)mTailWheel.setPWM(30);
+	else if(deg == 0)mTailWheel.setPWM(-30);
 	while(1){
-		if(mTailWheel.getCount() < deg)break;
+		if(mTailWheel.getCount() > deg)break;
 	}
-	mTailWheel.setPWM(1);
+	mTailWheel.setPWM(0);
 }

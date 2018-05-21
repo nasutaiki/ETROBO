@@ -33,7 +33,6 @@ Calibration::Calibration(const ev3api::ColorSensor& colorSensor,
       mSum(0) {
 }
 
-
 /**
  * デストラクタ
  */

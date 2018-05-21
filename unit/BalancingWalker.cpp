@@ -1,4 +1,3 @@
-
 /******************************************************************************
  *  BalancingWalker.cpp (for LEGO Mindstorms EV3)
  *  Created on: 2015/01/25
@@ -150,7 +149,5 @@ bool BalancingWalker::detectFall()
         return false;
     }
 }
-int  BalancingWalker::jyro(){
-	return mGyroSensor.getAnglerVelocity();
-}
+
 

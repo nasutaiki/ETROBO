@@ -26,11 +26,8 @@ public:
 	void run2();
 	void run3();
 	void runOnOff();
-    void runOnOff4();
-	void runOnOff99();
 	int runOnOff2();
     int runOnOff3();
-    void runFind();
     void runBack1();
     void runBack2();
 	void run90();
@@ -41,7 +38,6 @@ public:
     void runTurn();
 	void edgeChage(int edge); 
 	int getAngle();
-	void Init();
 
 private:
     const LineMonitor* mLineMonitor;
